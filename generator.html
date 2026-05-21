@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angel for Music — Video Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#141414;color:#e8e8e8;font-family:'Inter',sans-serif;padding:24px;max-width:1100px;margin:0 auto}
+h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:#e8a820;margin-bottom:4px}
+.sub{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#666;margin-bottom:28px}
+.sec{background:#1e1e1e;border:0.5px solid #333;border-radius:12px;padding:16px 20px;margin-bottom:14px}
+.sec-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#666;font-weight:600;margin-bottom:12px}
+.up-row{display:flex;gap:8px;flex-wrap:wrap}
+.up-z{border:1.5px dashed #444;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;color:#888;display:flex;align-items:center;gap:7px;transition:all .2s;background:transparent}
+.up-z:hover{border-color:#c8860a;color:#e8e8e8}
+.up-z.ok{border-color:#4caf50;border-style:solid;color:#4caf50}
+.fl{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.fl-l{font-size:11px;color:#666;min-width:72px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.fi{flex:1;padding:7px 11px;font-size:13px;border-radius:8px;border:0.5px solid #333;background:#111;color:#e8e8e8;font-family:'Inter',sans-serif}
+.sl-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.sl-row label{font-size:11px;color:#666;min-width:72px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.sl-row input[type=range]{flex:1;accent-color:#c8860a}
+.sl-row span{min-width:36px;text-align:right;font-size:12px;color:#e8e8e8;font-weight:500}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{padding:7px 18px;border-radius:100px;border:1.5px solid #333;background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:#888;transition:all .2s}
+.tab.active{background:#c8860a;border-color:#c8860a;color:#fff}
+.cb{padding:9px 18px;border-radius:8px;border:1.5px solid #333;background:transparent;font-size:13px;font-weight:500;cursor:pointer;color:#e8e8e8;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.cb:hover{background:#252525}
+.cb.gold{background:#c8860a;border-color:#c8860a;color:#fff}
+.cb.gold:hover{background:#a36e08}
+.cb:disabled{opacity:.3;cursor:not-allowed}
+.genre-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.gp{padding:5px 14px;border-radius:100px;border:1.5px solid #333;background:transparent;font-size:12px;cursor:pointer;color:#888;transition:all .2s}
+.gp.active{border-color:#c8860a;color:#c8860a;background:rgba(200,134,10,0.08)}
+.ai-out{background:#111;border:0.5px solid #333;border-radius:8px;padding:14px;font-size:13px;line-height:1.75;color:#e8e8e8;display:none;white-space:pre-wrap;margin-top:10px}
+.ai-out.show{display:block}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(200,134,10,0.12);color:#c8860a;font-size:11px;margin:2px;font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;transition:background .3s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.dot.rec{background:#e53935;animation:blink 1s infinite}
+.dot.ok{background:#4caf50}
+textarea.fi{resize:vertical;min-height:80px;line-height:1.5}
+canvas{display:block;border-radius:10px;max-width:100%;border:0.5px solid #2a2a2a}
+.api-row{display:flex;gap:8px;align-items:center}
+.api-note{font-size:11px;color:#555;margin-top:6px}
+</style>
+</head>
+<body>
+
+<h1>Angel <span style="color:#fff">for</span> Music</h1>
+<div class="sub">Video Generator — Rainer Engel</div>
+
+<!-- API KEY -->
+<div class="sec">
+  <div class="sec-title">🔑 OpenAI API-Key (ChatGPT)</div>
+  <div class="api-row">
+    <input class="fi" id="apiKeyInput" type="password" placeholder="sk-proj-..." style="font-family:monospace">
+    <button class="cb gold" onclick="saveApiKey()">Speichern</button>
+    <span id="apiKeySaved" style="font-size:12px;color:#4caf50"></span>
+  </div>
+  <div class="api-note">Wird nur lokal in deinem Browser gespeichert (localStorage) — nie übertragen.</div>
+</div>
+
+<!-- UPLOADS -->
+<div class="sec">
+  <div class="sec-title">Medien</div>
+  <div class="up-row">
+    <label class="up-z" id="mz">🎵 <span id="ml">MP3 laden</span><input type="file" accept="audio/*" style="display:none" onchange="hMP3(this)"></label>
+    <label class="up-z" id="cz">🖼 <span id="cl">Cover-Bild</span><input type="file" accept="image/*" style="display:none" onchange="hCover(this)"></label>
+    <label class="up-z" id="biz">🌄 <span id="bil">Hintergrund-Bild</span><input type="file" accept="image/*" style="display:none" onchange="hBgImg(this)"></label>
+    <label class="up-z" id="bvz">🎬 <span id="bvl">Hintergrund-Video</span><input type="file" accept="video/*" style="display:none" onchange="hBgVid(this)"></label>
+    <label class="up-z" id="txz">📝 <span id="txl">Songtext</span><input type="file" accept=".txt,.textClipping,.rtf,.docx,text/plain,text/rtf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none" onchange="hText(this)"></label>
+  </div>
+</div>
+
+<!-- EINSTELLUNGEN -->
+<div class="sec">
+  <div class="sec-title">Song & Design</div>
+  <div class="fl"><span class="fl-l">Titel</span><input class="fi" id="sT" type="text" placeholder="My Heart Was Broken" oninput="rd()"></div>
+  <div class="genre-pills">
+    <span style="font-size:11px;color:#666;padding:5px 0;text-transform:uppercase;letter-spacing:.5px;font-weight:500;margin-right:4px">Genre:</span>
+    <button class="gp active" onclick="setGenre('balladen',this)">🎸 Balladen</button>
+    <button class="gp" onclick="setGenre('wiesn',this)">🍺 Wiesn</button>
+    <button class="gp" onclick="setGenre('hard',this)">🔥 Hardmusik</button>
+  </div>
+  <div class="sl-row"><label>Blur</label><input type="range" min="0" max="60" value="28" id="slBlur" oninput="rd()"><span id="slBlurV">28px</span></div>
+  <div class="sl-row"><label>Helligkeit</label><input type="range" min="10" max="100" value="55" id="slBright" oninput="rd()"><span id="slBrightV">55%</span></div>
+</div>
+
+<!-- CANVAS -->
+<div class="tabs">
+  <button class="tab active" onclick="sw('yt',this)">▶ YouTube 16:9</button>
+  <button class="tab" onclick="sw('tt',this)">↑ TikTok 9:16</button>
+  <button class="tab" onclick="sw('sq',this)">□ Instagram 1:1</button>
+</div>
+<div id="yv" style="margin-bottom:12px"><canvas id="yc" width="1920" height="1080" style="max-width:100%;height:auto"></canvas></div>
+<div id="tv" style="display:none;margin-bottom:12px"><canvas id="tc" width="1080" height="1920" style="max-width:100%;height:auto"></canvas></div>
+<div id="sqv" style="display:none;margin-bottom:12px"><canvas id="sqc" width="1080" height="1080" style="max-width:100%;height:auto;max-height:480px"></canvas></div>
+
+<!-- Refrain-Start (nur sichtbar bei 1:1 Tab) -->
+<div id="refrainRow" style="display:none;margin-bottom:12px">
+  <div class="sec">
+    <div class="sec-title">⏱ Refrain-Start — 29s Instagram Clip</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="refrainInput" class="fi" value="0:00" style="max-width:72px;text-align:center;font-variant-numeric:tabular-nums">
+      <button class="cb" onclick="setRefrainNow()">🎯 Jetzt setzen</button>
+      <span id="refrainHint" style="font-size:12px;color:#666">Vorschau starten → beim Refrain auf "Jetzt setzen" klicken</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+  <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#888">
+    <div class="dot" id="dot"></div><span id="stxt">Cover &amp; MP3 laden</span>
+  </div>
+  <div style="flex:1"></div>
+  <button class="cb" id="pb" onclick="tPlay()" disabled>▶ Vorschau</button>
+  <button class="cb" id="addToBatchBtn" onclick="addToBatch()" disabled style="border-color:#2a7a4f;color:#4caf50">➕ Zur Batch-Liste</button>
+  <button class="cb gold" id="eb" onclick="startExport()" disabled>⬇ Video exportieren</button>
+  <button class="cb gold" id="allBtn" onclick="exportAll()" disabled style="background:#7c3aed;border-color:#7c3aed">📦 Alles exportieren</button>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:20px">
+  <div style="flex:1;height:3px;background:#2a2a2a;border-radius:2px;overflow:hidden"><div id="pg" style="height:100%;width:0%;background:#c8860a;border-radius:2px;transition:width .4s linear"></div></div>
+  <span id="td" style="font-size:11px;color:#666;min-width:80px;text-align:right">0:00 / 0:00</span>
+</div>
+
+<!-- KI BESCHREIBUNG -->
+<div class="sec">
+  <div class="sec-title">🤖 KI-Beschreibung & Hashtags</div>
+  <div class="fl" style="margin-bottom:10px">
+    <span class="fl-l">Songtext</span>
+    <textarea class="fi" id="lyrics" placeholder="Songtext hier einfügen oder .txt Datei oben laden..."></textarea>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="cb gold" id="aiBtn" onclick="generateAI()">✨ Beschreibung generieren</button>
+    <button class="cb" id="copyBtn" onclick="copyAll()" style="display:none">📋 Alles kopieren</button>
+    <span id="aiStatus" style="font-size:12px;color:#666"></span>
+  </div>
+  <div id="aiResult" class="ai-out">
+    <div id="aiTitleOut" style="margin-bottom:10px"></div>
+    <div id="aiDescOut" style="margin-bottom:12px"></div>
+    <div id="aiTagsOut"></div>
+  </div>
+</div>
+
+<!-- BATCH -->
+<div class="sec" style="margin-top:8px">
+  <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>🎬 Batch-Export</span>
+    <button onclick="clearBatch()" style="background:none;border:none;color:#555;cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Liste leeren</button>
+  </div>
+  <div id="batchList" style="margin-bottom:12px;min-height:32px">
+    <div style="font-size:12px;color:#555;padding:6px 0">Noch leer — MP3 + Cover laden und auf "➕ Zur Batch-Liste" klicken.</div>
+  </div>
+  <button class="cb gold" id="batchExportBtn" onclick="batchExport()" disabled style="background:#1a6b3a;border-color:#1a6b3a;width:100%;justify-content:center">🎬 Batch exportieren</button>
+  <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.6">
+    💤 PC schläft nicht ein während Export (Wake Lock aktiv)<br>
+    🔔 Browser-Benachrichtigung wenn fertig<br>
+    ⚠ Chrome sichtbar lassen (nicht minimieren) — sonst wird der Export verlangsamt
+  </div>
+</div>
+
+<video id="bgVidEl" loop muted playsinline style="display:none"></video>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="js/canvas.js?v=7"></script>
+<script src="js/audio.js?v=7"></script>
+<script src="js/export.js?v=7"></script>
+<script src="js/ai-description.js?v=7"></script>
+<script src="js/batch.js?v=7"></script>
+<script>
+  window.addEventListener('load', loadSavedApiKey);
+</script>
+</body>
+</html>
