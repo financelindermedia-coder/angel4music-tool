@@ -25,6 +25,11 @@ async function recordVideo(isYT) {
   const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
   const mime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
 
+  // TikTok: max 30 Sekunden
+  const endTime = isYT
+    ? window.aud.duration - 0.15
+    : Math.min(30, window.aud.duration - 0.15);
+
   return new Promise((resolve, reject) => {
     const chunks = [];
     const rec = new MediaRecorder(canvasStream, { mimeType: mime, videoBitsPerSecond: 4000000 });
@@ -50,7 +55,7 @@ async function recordVideo(isYT) {
         }
       }
       isYT ? dYT() : dTT();
-      if (!window.aud.ended && window.aud.currentTime < window.aud.duration - 0.15) {
+      if (!window.aud.ended && window.aud.currentTime < endTime) {
         anim = requestAnimationFrame(recLoop);
       } else {
         setTimeout(() => rec.stop(), 400);
