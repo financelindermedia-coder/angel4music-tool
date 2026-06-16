@@ -1,0 +1,34 @@
+{
+  "name": "angel4music-tool",
+  "version": "1.0.0",
+  "description": "Angel for Music — Video Generator Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "de.angel4music.generator",
+    "productName": "Angel for Music",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "generator.html",
+      "index.html",
+      "main.js",
+      "js/**/*",
+      "!dist/**",
+      "!node_modules/**",
+      "!upload/**",
+      "!.git/**"
+    ]
+  }
+}
